@@ -1,1 +1,1 @@
-# goldsmiths_dct_cc_term_one_finalproject
+# Goldsmiths DCT Creative Coding - Term One Final Project
