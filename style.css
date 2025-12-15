@@ -1,8 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
 html, body {
   margin: 0;
   padding: 0;
+  font-family: 'Space Mono', monospace;
 }
 
 canvas {
   display: block;
+}
+
+.input-intro {
+  font-size: 28px;
+}
+
+.input-instruction {
+  font-size: 14px;
+}
+
+.word-input {
+  padding: 8px;
+  font-size: 14px;
+  font-family: 'Space Mono', monospace;
+}
+
+.word-list {
+  font-size: 28px;
+}
+
+.start-button {
+  padding: 10px 30px;
+  font-size: 14px;
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
 }

@@ -12,15 +12,81 @@ let inversion = true;
 let concentrationTime = 0;
 let attractionRadius = 200;
 
-// Define your words here - easy to add or remove!
-const WORDS = [
-  { text: 'Create', count: 20 },
-  { text: 'Play', count: 20 },
-  { text: 'Rest', count: 20 }
-];
+// User input words
+let WORDS = [];
+let inputStarted = false;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  background(220);
+  textAlign(CENTER, CENTER);
+  
+  let textStartY = 100;
+  let textX = 100;
+  let textSpacing = 50;
+
+
+  // Create input interface
+  let intro = createP('What\'s on your mind today?<br>Let\'s make a list and get things organised!');
+  intro.class('input-intro');
+  intro.position(textX, textStartY);
+
+
+  let instruction = createP('Enter 2-8 words (press Enter after each):');
+  instruction.class('input-instruction');
+  instruction.position(textX, textStartY + textSpacing *3);
+  
+  let wordInput = createInput('');
+  wordInput.class('word-input');
+  wordInput.position(textX, textStartY + textSpacing * 4);
+
+  let startBtn = createButton('Start');
+  startBtn.class('start-button');
+  startBtn.position(textX, textStartY + textSpacing * 5);
+  startBtn.hide(); // Hide until minimum words entered
+
+  let wordList = createP('Words entered: 0');
+  wordList.class('word-list');
+  wordList.position(textX, textStartY + textSpacing * 7);
+  
+  
+  
+  let userWords = [];
+  
+  // Handle Enter key to add word
+  wordInput.changed(() => {
+    let val = wordInput.value().trim();
+    if (val !== '' && userWords.length < 8) {
+      userWords.push({ text: val, count: 20 });
+      wordInput.value('');
+      
+      // Create vertical list with checkboxes
+      let listHTML = `Items on your list: ${userWords.length}<br>`;
+      listHTML += userWords.map(w => `☐ ${w.text}`).join('<br>');
+      wordList.html(listHTML);
+      
+      if (userWords.length >= 2) {
+        startBtn.show();
+      }
+    }
+  });
+  
+  // Handle start button
+  startBtn.mousePressed(() => {
+    if (userWords.length >= 2) {
+      WORDS = userWords;
+      intro.remove();
+      instruction.remove();
+      wordInput.remove();
+      wordList.remove();
+      startBtn.remove();
+      inputStarted = true;
+      initializeSketch();
+    }
+  });
+}
+
+function initializeSketch() {
   video = createCapture(VIDEO);
   video.hide();
 
@@ -51,10 +117,14 @@ function setup() {
 
     groups.push(group);
   }
-
 }
 
 function draw() {
+
+  if (!inputStarted) {
+    background(220);
+    return;
+  }
 
   if (inversion) {
     background(0);

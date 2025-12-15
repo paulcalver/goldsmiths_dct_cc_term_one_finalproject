@@ -8,7 +8,7 @@ class Word {
     this.maxSpeed = random(2, 12);  // Random speed between 2 and 8
     this.maxForce = 0.4;
     this.r = 20;
-    this.textSize = 32;
+    this.textSize = 18;
     this.text = text;  // Store the word to display
 
   }
