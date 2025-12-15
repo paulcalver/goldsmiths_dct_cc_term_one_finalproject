@@ -8,9 +8,37 @@ class Word {
     this.maxSpeed = random(1, 5);  // Random speed between 1 and 5
     this.maxForce = 0.4;
     this.r = 20;
-    this.textSize = 18;
-    this.text = text;  // Store the word to display
+    this.textSize = 18;    this.lineHeight = 1; // Line height multiplier (1.3 = 130% of text size)    this.text = text;  // Store the word to display
+    this.maxTextWidth = 150; // Maximum width before wrapping
+    this.wrappedLines = this.wrapText(text);
 
+  }
+  
+  // Split long text into multiple lines
+  wrapText(txt) {
+    let words = txt.split(' ');
+    let lines = [];
+    let currentLine = '';
+    
+    textSize(this.textSize);
+    
+    for (let word of words) {
+      let testLine = currentLine + (currentLine ? ' ' : '') + word;
+      let testWidth = textWidth(testLine);
+      
+      if (testWidth > this.maxTextWidth && currentLine !== '') {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines.length > 0 ? lines : [txt];
   }
 
 
@@ -88,7 +116,14 @@ class Word {
       rotate(this.vel.heading());
     }
     
-    text(this.text, 0, 0);
+    // Draw multi-line text
+    let lineSpacing = this.textSize * this.lineHeight;
+    let startY = -(this.wrappedLines.length - 1) * lineSpacing / 2;
+    
+    for (let i = 0; i < this.wrappedLines.length; i++) {
+      text(this.wrappedLines[i], 0, startY + i * lineSpacing);
+    }
+    
     pop();
   }
 

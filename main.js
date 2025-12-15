@@ -125,7 +125,7 @@ function initializeSketch() {
   restartButton.mousePressed(() => {
     // Increase each word count by 25%
     for (let word of WORDS) {
-      word.count = Math.floor(word.count * 1.25);
+      word.count = Math.floor(word.count * 1.5);
     }
     
     // Clear existing groups
