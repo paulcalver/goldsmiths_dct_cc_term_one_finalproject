@@ -242,7 +242,7 @@ function draw() {
     let clusterPercentage = clusteredCount / totalMembers;
     
     // Determine group state
-    if (clusterPercentage >= 0.99) {
+    if (clusterPercentage >= 1.0) {
       groupStates[group.name] = 'fully_clustered';
     } else if (clusterPercentage >= 0.5) {
       groupStates[group.name] = 'half_clustered';
