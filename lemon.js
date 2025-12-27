@@ -1,5 +1,5 @@
-class Panel {
-  constructor(x, y, size, color, cornerRadius) {
+class Lemon {
+  constructor(x, y, size, img) {
     // Store original grid position
     this.gridX = x;
     this.gridY = y;
@@ -16,8 +16,7 @@ class Panel {
 
     // Visual properties
     this.size = size;
-    this.color = color;
-    this.cornerRadius = cornerRadius;
+    this.img = img;
 
     // Behavior mode
     this.behaviorMode = 'grid'; // 'grid', 'seek', 'arrive', 'flee', 'wander'
@@ -100,7 +99,7 @@ class Panel {
   // Return to grid position
   returnToGrid() {
     let target = createVector(this.gridX, this.gridY);
-    let force = this.arrive(target, 1000);
+    let force = this.arrive(target, 100);
     this.applyForce(force);
   }
 
@@ -143,9 +142,28 @@ class Panel {
   }
 
   show() {
-    fill(this.color);
-    rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size, this.cornerRadius);
-    //circle(this.x, this.y, this.size); 
+    if (this.img) {
+      // Calculate proportional dimensions based on image aspect ratio
+      let imgAspect = this.img.width / this.img.height;
+      let displayWidth, displayHeight;
 
+      // Fit image within the size constraint while maintaining aspect ratio
+      if (imgAspect > 1) {
+        // Image is wider than tall
+        displayWidth = this.size;
+        displayHeight = this.size / imgAspect;
+      } else {
+        // Image is taller than wide
+        displayHeight = this.size;
+        displayWidth = this.size * imgAspect;
+      }
+
+      imageMode(CENTER);
+      image(this.img, this.x, this.y, displayWidth, displayHeight);
+    } else {
+      // Fallback to yellow ellipse if no image
+      fill(254, 213, 4);
+      ellipse(this.x, this.y, this.size * 0.7, this.size);
+    }
   }
 }

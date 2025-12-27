@@ -1,59 +1,38 @@
-let panels = [];
+let lemons = [];
+let lemonImg;
 
 let gridSize;
 let rows;
 let cols;
 let offsetX, offsetY;
-let padding = 8; // percentage
-let resolution = 100; // number of panels along the smaller dimension
+let padding = 20; // percentage
+let resolution = 20; // number of panels along the smaller dimension
 
-let cornerRadius = 0.0; // percentage
 
 let maxElevation = 60; // degrees
 
+function preload() {
+  lemonImg = loadImage('assets/lemon.png');
+}
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  colorMode(HSB, 360, 100, 100);
   noStroke();
   drawGrid();
 }
 
 function draw() {
-  background(0);
+  background(248,236,180);
 
-  // Find current sun position
-  const sunCell = findSunCell(cols, rows);
 
-  // Create mouse target vector
-  let mouseTarget = createVector(mouseX, mouseY);
-
-  for (let i = 0; i < panels.length; i++) {
-    // Execute behavior (flee from mouse)
-    //panels[i].executeBehavior(mouseTarget);
-    //panels[i].update();
-
-    // Highlight sun cell if above horizon
-    if (sunCell) {
-      const sunIndex = sunCell.x * rows + sunCell.y;
-      if (i === sunIndex) {
-        const originalColor = panels[i].color;
-        panels[i].color = color(60, 100, 100); // Bright yellow for sun
-        panels[i].show();
-        panels[i].color = originalColor; // Restore original color
-        continue;
-      }
-    }
-    panels[i].show();
+  // Display all lemons
+  for (let i = 0; i < lemons.length; i++) {
+    lemons[i].show();
   }
 }
 
-function keyPressed() {
-  if (key === 'g') {
-    for (let panel of panels) {
-      panel.setBehavior('grid');
-    }
-  }
-}
+
+
 
 
 function windowResized() {
@@ -75,17 +54,15 @@ function drawGrid() {
   offsetY = (height - gridHeight) / 2;
 
   // Create panels
-  panels = [];
+  lemons = [];
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       let x = i * gridSize + offsetX + gridSize / 2;
       let y = j * gridSize + offsetY + gridSize / 2;
       let size = gridSize - (gridSize * padding) / 100;
 
-      let panelBrightness = map(j, 0, rows - 1, 100, 10);
-      let panel = new Panel(x, y, size, color(32, 92, panelBrightness), size * cornerRadius);
-      panel.setBehavior('flee'); // Set all panels to flee from mouse
-      panels.push(panel);
+      let lemon = new Lemon(x, y, size, lemonImg);
+      lemons.push(lemon);
     }
   }
 }
