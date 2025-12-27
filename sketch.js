@@ -5,7 +5,7 @@ let rows;
 let cols;
 let offsetX, offsetY;
 let padding = 8; // percentage
-let resolution = 40; // number of panels along the smaller dimension
+let resolution = 100; // number of panels along the smaller dimension
 
 let cornerRadius = 0.0; // percentage
 
@@ -24,7 +24,14 @@ function draw() {
   // Find current sun position
   const sunCell = findSunCell(cols, rows);
 
+  // Create mouse target vector
+  let mouseTarget = createVector(mouseX, mouseY);
+
   for (let i = 0; i < panels.length; i++) {
+    // Execute behavior (flee from mouse)
+    //panels[i].executeBehavior(mouseTarget);
+    //panels[i].update();
+
     // Highlight sun cell if above horizon
     if (sunCell) {
       const sunIndex = sunCell.x * rows + sunCell.y;
@@ -37,6 +44,14 @@ function draw() {
       }
     }
     panels[i].show();
+  }
+}
+
+function keyPressed() {
+  if (key === 'g') {
+    for (let panel of panels) {
+      panel.setBehavior('grid');
+    }
   }
 }
 
@@ -68,7 +83,9 @@ function drawGrid() {
       let size = gridSize - (gridSize * padding) / 100;
 
       let panelBrightness = map(j, 0, rows - 1, 100, 10);
-      panels.push(new Panel(x, y, size, color(32, 92, panelBrightness), size * cornerRadius));
+      let panel = new Panel(x, y, size, color(32, 92, panelBrightness), size * cornerRadius);
+      panel.setBehavior('flee'); // Set all panels to flee from mouse
+      panels.push(panel);
     }
   }
 }
