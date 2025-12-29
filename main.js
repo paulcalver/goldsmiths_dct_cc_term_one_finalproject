@@ -15,7 +15,7 @@ function setup() {
   input.style('border', 'none');
   input.style('background-color', 'transparent');
   input.style('color', '#000');
-  input.style('font-size', '16px');
+  input.style('font-size', '26px');
   input.style('resize', 'none');
   input.style('outline', 'none');
   input.attribute('placeholder', 'Type here...');
@@ -28,6 +28,7 @@ let lastTextLength = 0;
 function handleVisualEffects(text, spaceTyped) {
   let previousLength = shapes.length;
 
+
   // Handle word completion effects
   if (spaceTyped && words.length > 0) {
     let lastWord = words[words.length - 1].toLowerCase();
@@ -38,7 +39,7 @@ function handleVisualEffects(text, spaceTyped) {
     if (lastWord === 'sun' || lastWord === 'sunshine') {
       let x = random(width * 0.5, width);
       let y = random(0, height);
-      let sunColor = color(255, 204, 0); // Yellow
+      let sunColor = color(49, 79, 100); // Yellow
       shapes.push(new Circle(x, y, 100, sunColor));
       console.log('Sun created!');
     }
@@ -48,7 +49,7 @@ function handleVisualEffects(text, spaceTyped) {
     // }
     else {
       // Default: change background color
-      bgColor = lastWordTotal % 256;
+      bgColor = color((lastWordTotal % 320), 100, 100);
       console.log('BG Color:', bgColor);
     }
   }
@@ -87,16 +88,18 @@ function draw() {
   // Use the background color set when a word is completed
   background(bgColor);
 
+  // Update and draw all shapes
+  noStroke();
+  for (let shape of shapes) {
+    shape.flock(shapes);
+    shape.update();
+    shape.borders();
+    shape.display();
+  }
+
   fill(230);
   rect(0, 0, width * 0.5, height);
 
-  // Draw all shapes
-  noStroke();
-  for (let shape of shapes) {
-    // Reset fill to white for regular shapes
-    fill(255);
-    shape.display();
-  }
 }
 
 
