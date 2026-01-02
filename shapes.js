@@ -1,247 +1,234 @@
 class Shape {
   constructor(x, y) {
     this.position = createVector(x, y);
-    this.acceleration = createVector(0, 0);
-    this.velocity = createVector(random(-1, 1), random(-1, 1));
-
-    // Maximum speed
-    this.maxSpeed = 8;
-
-    // Maximum steering force
-    this.maxForce = 0.5;
-
-    colorMode(HSB, 360, 100, 100);
+    this.velocity = createVector(0, 0);
+    this.speed = 0;
+    colorMode(HSB, 360, 100, 100, 255);
     this.color = color(random(360), 100, 100);
+    // this.lifespan = 255; // Start fully opaque
+    // this.fadeRate = 255 / (100 * 60); // Fade over 10 seconds (assuming 60fps)
   }
 
-  applyForce(force) {
-    this.acceleration.add(force);
+  setSpeed(speed) {
+    this.speed = speed;
+    if (speed > 0) {
+      this.velocity = p5.Vector.random2D().mult(speed);
+    } else {
+      this.velocity.mult(0);
+    }
   }
 
-  flock(shapes) {
-    // Separate into same type and different type
-    let sameType = [];
-    let differentType = [];
-
-    for (let shape of shapes) {
-      if (shape !== this) {
-        if (this.isOdd() === shape.isOdd()) {
-          sameType.push(shape);
-        } else {
-          differentType.push(shape);
-        }
-      }
+  addSpeed(speedIncrease) {
+    if (this.speed === 0) {
+      // If not moving, start with random direction
+      this.velocity = p5.Vector.random2D().mult(speedIncrease);
+      this.speed = speedIncrease;
+    } else {
+      // If already moving, increase speed in current direction
+      this.speed += speedIncrease;
+      this.velocity.setMag(this.speed);
     }
-
-    // Flock with same type
-    let separation = this.separate(sameType);
-    let alignment = this.align(sameType);
-    let cohesion = this.cohesion(sameType);
-
-    // Avoid different type
-    let avoidance = this.avoid(differentType);
-
-    // Weight the forces
-    separation.mult(1.5);
-    alignment.mult(1.0);
-    cohesion.mult(1.0);
-    avoidance.mult(2.0);
-
-    // Apply forces
-    this.applyForce(separation);
-    this.applyForce(alignment);
-    this.applyForce(cohesion);
-    this.applyForce(avoidance);
-  }
-
-  separate(shapes) {
-    let desiredSeparation = 25.0;
-    let steer = createVector(0, 0);
-    let count = 0;
-
-    for (let shape of shapes) {
-      let d = p5.Vector.dist(this.position, shape.position);
-      if (d > 0 && d < desiredSeparation) {
-        let diff = p5.Vector.sub(this.position, shape.position);
-        diff.normalize();
-        diff.div(d);
-        steer.add(diff);
-        count++;
-      }
-    }
-
-    if (count > 0) {
-      steer.div(count);
-    }
-
-    if (steer.mag() > 0) {
-      steer.normalize();
-      steer.mult(this.maxSpeed);
-      steer.sub(this.velocity);
-      steer.limit(this.maxForce);
-    }
-    return steer;
-  }
-
-  align(shapes) {
-    let neighborDistance = 50;
-    let sum = createVector(0, 0);
-    let count = 0;
-
-    for (let shape of shapes) {
-      let d = p5.Vector.dist(this.position, shape.position);
-      if (d > 0 && d < neighborDistance) {
-        sum.add(shape.velocity);
-        count++;
-      }
-    }
-
-    if (count > 0) {
-      sum.div(count);
-      sum.normalize();
-      sum.mult(this.maxSpeed);
-      let steer = p5.Vector.sub(sum, this.velocity);
-      steer.limit(this.maxForce);
-      return steer;
-    }
-    return createVector(0, 0);
-  }
-
-  cohesion(shapes) {
-    let neighborDistance = 50;
-    let sum = createVector(0, 0);
-    let count = 0;
-
-    for (let shape of shapes) {
-      let d = p5.Vector.dist(this.position, shape.position);
-      if (d > 0 && d < neighborDistance) {
-        sum.add(shape.position);
-        count++;
-      }
-    }
-
-    if (count > 0) {
-      sum.div(count);
-      return this.seek(sum);
-    }
-    return createVector(0, 0);
-  }
-
-  avoid(shapes) {
-    let avoidDistance = 50.0;
-    let steer = createVector(0, 0);
-    let count = 0;
-
-    for (let shape of shapes) {
-      let d = p5.Vector.dist(this.position, shape.position);
-      if (d > 0 && d < avoidDistance) {
-        let diff = p5.Vector.sub(this.position, shape.position);
-        diff.normalize();
-        diff.div(d); // Weight by distance
-        steer.add(diff);
-        count++;
-      }
-    }
-
-    if (count > 0) {
-      steer.div(count);
-    }
-
-    if (steer.mag() > 0) {
-      steer.normalize();
-      steer.mult(this.maxSpeed);
-      steer.sub(this.velocity);
-      steer.limit(this.maxForce);
-    }
-    return steer;
-  }
-
-  seek(target) {
-    let desired = p5.Vector.sub(target, this.position);
-    desired.normalize();
-    desired.mult(this.maxSpeed);
-    let steer = p5.Vector.sub(desired, this.velocity);
-    steer.limit(this.maxForce);
-    return steer;
   }
 
   update() {
-    // Update velocity
-    this.velocity.add(this.acceleration);
-    // Limit speed
-    this.velocity.limit(this.maxSpeed);
     this.position.add(this.velocity);
-    // Reset acceleration
-    this.acceleration.mult(0);
+    this.edges();
+    // this.lifespan -= this.fadeRate;
+    // To be implemented by subclasses
+  }
+
+  isAlive() {
+    // return this.lifespan > 0;
+    return true;
+  }
+
+  edges() {
+    if (this.position.x > width) {
+      this.position.x = 0;
+    } else if (this.position.x < 0) {
+      this.position.x = width;
+    }
+
+    if (this.position.y > height) {
+      this.position.y = 0;
+    } else if (this.position.y < 0) {
+      this.position.y = height;
+    }
   }
 
   display() {
     // To be implemented by subclasses
   }
 
-  isOdd() {
-    // To be implemented by subclasses
-    return false;
-  }
+  // Check if shape needs to wrap and draw at wrapped positions
+  displayWithWrap() {
+    let size = this.getSize ? this.getSize() : 100; // Get shape size for wrapping
 
-  borders() {
-    if (this.position.x < width / 2 - this.size) {
-      this.position.x = width + this.size;
+    // Draw main shape
+    this.display();
+
+    // Draw wrapped versions when near edges
+    if (this.position.x - size < 0) {
+      // Near left edge, draw on right
+      push();
+      translate(width, 0);
+      this.display();
+      pop();
+    } else if (this.position.x + size > width) {
+      // Near right edge, draw on left
+      push();
+      translate(-width, 0);
+      this.display();
+      pop();
     }
 
-    if (this.position.y < -this.size) {
-      this.position.y = height + this.size;
+    if (this.position.y - size < 0) {
+      // Near top edge, draw on bottom
+      push();
+      translate(0, height);
+      this.display();
+      pop();
+    } else if (this.position.y + size > height) {
+      // Near bottom edge, draw on top
+      push();
+      translate(0, -height);
+      this.display();
+      pop();
     }
 
-    if (this.position.x > width + this.size) {
-      this.position.x = width / 2 - this.size;
-    }
-
-    if (this.position.y > height + this.size) {
-      this.position.y = -this.size;
+    // Handle corners (shape wrapping both horizontally and vertically)
+    if ((this.position.x - size < 0 || this.position.x + size > width) &&
+        (this.position.y - size < 0 || this.position.y + size > height)) {
+      let xOffset = this.position.x - size < 0 ? width : -width;
+      let yOffset = this.position.y - size < 0 ? height : -height;
+      push();
+      translate(xOffset, yOffset);
+      this.display();
+      pop();
     }
   }
 }
 
 class Circle extends Shape {
-  constructor(x, y, radius, customColor) {
+  constructor(x, y, radius, customColor, targetRadius = null, growthSpeed = 20, autoRemove = false) {
     super(x, y);
     this.radius = radius;
-    this.size = radius; // For border detection
-    // Use custom color if provided, otherwise use parent's random color
+    this.targetRadius = targetRadius;
+    this.growthSpeed = growthSpeed;
+    this.isGrowing = targetRadius !== null;
+    this.autoRemove = autoRemove;
     if (customColor) {
       this.color = customColor;
     }
   }
 
-  isOdd() {
-    return true; // Circles are created from odd ASCII values
+  getSize() {
+    return this.radius;
+  }
+
+  update() {
+    if (this.isGrowing && this.radius < this.targetRadius) {
+      this.radius += this.growthSpeed;
+      if (this.radius >= this.targetRadius) {
+        this.radius = this.targetRadius;
+        this.isGrowing = false;
+      }
+    }
+    // Call parent update for movement
+    super.update();
+  }
+
+  isAlive() {
+    // If autoRemove is true, remove after growth is complete
+    if (this.autoRemove && !this.isGrowing) {
+      return false;
+    }
+    return super.isAlive();
   }
 
   display() {
+    // let c = color(hue(this.color), saturation(this.color), brightness(this.color), this.lifespan);
+    // fill(c);
     fill(this.color);
     ellipse(this.position.x, this.position.y, this.radius * 2);
   }
 }
 
-class Rectangle extends Shape {
-  constructor(x, y, width, height, customColor) {
-    super(x, y);
-    this.width = width;
-    this.height = height;
-    this.size = max(width, height); // For border detection, use larger dimension
-    // Use custom color if provided, otherwise use parent's random color
-    if (customColor) {
-      this.color = customColor;
-    }
+class Line {
+  constructor(amplitude = 20, frequency = 0.05, isHorizontal = true) {
+    this.amplitude = amplitude;
+    this.frequency = frequency;
+    this.timeOffset = random(1000);
+    this.isHorizontal = isHorizontal;
+    this.position = random(isHorizontal ? height : width);
+    this.points = 200;
+    this.strokeWeight = 80;
+    this.oscillationSpeed = random(0.01, 0.02);
+    this.baseOscillationSpeed = this.oscillationSpeed;
+    colorMode(HSB, 360, 100, 100, 255);
+    this.color = color(random(360), 100, 100);
+    // this.lifespan = 255;
+    // this.fadeRate = 255 / (100 * 60);
   }
 
-  isOdd() {
-    return false; // Rectangles are created from even ASCII values
+  setSpeed(speed) {
+    // For lines, speed affects oscillation
+    this.oscillationSpeed = speed * 0.01;
+  }
+
+  addSpeed(speedIncrease) {
+    // Increase oscillation speed
+    this.oscillationSpeed += speedIncrease * 0.01;
+  }
+
+  update() {
+    this.timeOffset += this.oscillationSpeed;
+    // this.lifespan -= this.fadeRate;
+  }
+
+  isAlive() {
+    // return this.lifespan > 0;
+    return true;
   }
 
   display() {
-    fill(this.color);
-    rect(this.position.x, this.position.y, this.width, this.height);
+    push();
+
+    // let c = color(hue(this.color), saturation(this.color), brightness(this.color), this.lifespan);
+    // stroke(c);
+    stroke(this.color);
+    strokeWeight(this.strokeWeight);
+    noFill();
+
+    let extension = 100; // Extend lines beyond canvas
+
+    beginShape();
+    if (this.isHorizontal) {
+      // Horizontal line across the width (extended)
+      for (let i = 0; i < this.points; i++) {
+        let x = map(i, 0, this.points - 1, -extension, width + extension);
+        let phase = (x / width) * this.frequency * TWO_PI;
+        let offset = sin(this.timeOffset + phase) * this.amplitude;
+        let y = this.position + offset;
+        curveVertex(x, y);
+      }
+    } else {
+      // Vertical line across the height (extended)
+      for (let i = 0; i < this.points; i++) {
+        let y = map(i, 0, this.points - 1, -extension, height + extension);
+        let phase = (y / height) * this.frequency * TWO_PI;
+        let offset = sin(this.timeOffset + phase) * this.amplitude;
+        let x = this.position + offset;
+        curveVertex(x, y);
+      }
+    }
+    endShape();
+
+    pop();
+  }
+
+  displayWithWrap() {
+    this.display();
   }
 }
+
