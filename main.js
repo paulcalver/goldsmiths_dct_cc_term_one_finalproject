@@ -8,21 +8,17 @@ let lastKeyTime = {
 let keyTimeout = 1000; // 1 second before shapes start dying
 let hasStarted = false; // Track if user has pressed any key
 
-// Sound variables
-let soundCircle;
-let soundLineH;
-let soundLineV;
-let soundSpeed;
+// Sound synths
+let synthCircle;
+let synthLineH;
+let synthLineV;
+let synthSpeed;
+let synthDrop;
+let synthAngry;
 
 // Preload sounds
 function preload() {
-  // Load sound files (replace with your actual file paths)
-  // soundCircle = loadSound('sounds/circle.mp3');
-  // soundLineH = loadSound('sounds/line-h.mp3');
-  // soundLineV = loadSound('sounds/line-v.mp3');
-  // soundSpeed = loadSound('sounds/speed.mp3');
-  
-  // Uncomment above lines and add your sound files to a 'sounds' folder
+  // Using p5.sound synthesizers instead of audio files
 }
 
 // Keyboard mapping
@@ -55,6 +51,31 @@ function setup() {
   let currentTime = millis();
   lastKeyTime.circle = currentTime;
   lastKeyTime.line = currentTime;
+  
+  // Initialize synthesizers
+  synthCircle = new p5.Oscillator('sine');
+  synthCircle.amp(0);
+  synthCircle.start();
+  
+  synthLineH = new p5.Oscillator('triangle');
+  synthLineH.amp(0);
+  synthLineH.start();
+  
+  synthLineV = new p5.Oscillator('sawtooth');
+  synthLineV.amp(0);
+  synthLineV.start();
+  
+  synthSpeed = new p5.Oscillator('square');
+  synthSpeed.amp(0);
+  synthSpeed.start();
+  
+  synthDrop = new p5.Oscillator('sine');
+  synthDrop.amp(0);
+  synthDrop.start();
+  
+  synthAngry = new p5.Oscillator('sawtooth');
+  synthAngry.amp(0);
+  synthAngry.start();
 }
 
 function draw() {
@@ -116,6 +137,12 @@ function applyDeathAnimation(shape) {
   }
   
   // Phase 2 (60+ frames): Gravity - fall off screen with increasing acceleration
+  if (shape.deathTimer === 60) {
+    // Play drop sound once when gravity kicks in
+    let dropFreq = map(shape.position ? shape.position.x : width/2, 0, width, 100, 300);
+    playSound(synthDrop, dropFreq, 0.3);
+  }
+  
   if (shape.deathTimer >= 60) {
     // Gravity increases over time - starts at 0.4, increases by 0.05 every frame
     let gravityAccel = 0.4 + (shape.deathTimer - 60) * 0.05;
@@ -175,10 +202,41 @@ function displayStartMessage() {
   push();
   blendMode(DIFFERENCE);
   textAlign(CENTER, CENTER);
-  textSize(width * 0.02); // 2% of width
+  textSize(width * 0.04); // 4% of width
   fill(255);
-  text('Press any key A-Z', width / 2, height / 4);
+  text('Hit any key A-Z to get started', width / 2, height / 4);
   pop();
+}
+
+// Play synthesized sounds
+function playSound(synth, freq, duration = 0.1) {
+  synth.freq(freq);
+  synth.amp(0.3, 0.01); // Quick attack
+  setTimeout(() => {
+    synth.amp(0, 0.1); // Fade out
+  }, duration * 1000);
+}
+
+// Play angry harsh sound (low growl with vibrato)
+function playAngrySound() {
+  let baseFreq = random(80, 120); // Low, menacing
+  
+  // Create harsh descending sound
+  synthAngry.freq(baseFreq);
+  synthAngry.amp(0.4, 0.01);
+  
+  // Descend frequency over time (angry growl)
+  let steps = 10;
+  for (let i = 0; i < steps; i++) {
+    setTimeout(() => {
+      synthAngry.freq(baseFreq - (i * 5)); // Descend
+    }, i * 20);
+  }
+  
+  // Fade out
+  setTimeout(() => {
+    synthAngry.amp(0, 0.15);
+  }, 200);
 }
 
 function keyPressed() {
@@ -193,21 +251,28 @@ function keyPressed() {
   if (action === 'circle') {
     lastKeyTime.circle = millis();
     createCircle();
-    if (soundCircle) soundCircle.play();
+    playSound(synthCircle, random(400, 800), 0.15); // Bubble-like
   } else if (action === 'line-h' || action === 'line-v') {
     lastKeyTime.line = millis();
     if (action === 'line-h') {
       createHorizontalLine();
-      if (soundLineH) soundLineH.play();
+      playSound(synthLineH, random(200, 400), 0.2); // Lower swoosh
     } else {
       createVerticalLine();
-      if (soundLineV) soundLineV.play();
+      playSound(synthLineV, random(300, 500), 0.2); // Higher swoosh
     }
   } else if (action === 'speed') {
     lastKeyTime.circle = millis();
     lastKeyTime.line = millis();
-    speedUp();
-    if (soundSpeed) soundSpeed.play();
+    
+    // Check if there are any shapes to speed up
+    if (shapes.length === 0) {
+      // Play angry sound when trying to speed up nothing
+      playAngrySound();
+    } else {
+      speedUp();
+      playSound(synthSpeed, random(600, 1000), 0.05); // Quick blip
+    }
   }
   
   return false;
