@@ -7,6 +7,7 @@ let lastKeyTime = {
 };
 let keyTimeout = 1000; // 1 second before shapes start dying
 let hasStarted = false; // Track if user has pressed any key
+let isFullscreen = false; // Track fullscreen state
 
 // Sound synths
 let synthCircle;
@@ -39,6 +40,7 @@ const keyMap = {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   colorMode(HSB, 360, 100, 100, 255);
+  textFont('Rubik One');
   
   // Random background from specified colors
   const bgColors = [
@@ -61,7 +63,7 @@ function setup() {
   synthLineH.amp(0);
   synthLineH.start();
   
-  synthLineV = new p5.Oscillator('sawtooth');
+  synthLineV = new p5.Oscillator('triangle');
   synthLineV.amp(0);
   synthLineV.start();
   
@@ -114,6 +116,9 @@ function draw() {
   if (!hasStarted) {
     displayStartMessage();
   }
+  
+  // Draw fullscreen button
+  drawFullscreenButton();
 }
 
 function applyDeathAnimation(shape) {
@@ -202,9 +207,9 @@ function displayStartMessage() {
   push();
   blendMode(DIFFERENCE);
   textAlign(CENTER, CENTER);
-  textSize(width * 0.04); // 4% of width
+  textSize(width * 0.02); // 2% of width
   fill(255);
-  text('Hit any key A-Z to get started', width / 2, height / 4);
+  text('Press any key A-Z', width / 2, height / 4);
   pop();
 }
 
@@ -243,6 +248,11 @@ function keyPressed() {
   let key_lower = key.toLowerCase();
   if (!keyMap[key_lower]) return;
   
+  // Resume audio context on first interaction (fixes browser audio policy)
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+  
   // Mark as started on first key press
   hasStarted = true;
   
@@ -256,10 +266,10 @@ function keyPressed() {
     lastKeyTime.line = millis();
     if (action === 'line-h') {
       createHorizontalLine();
-      playSound(synthLineH, random(200, 400), 0.2); // Lower swoosh
+      playSound(synthLineH, random(100, 200), 0.2); // Lower swoosh
     } else {
       createVerticalLine();
-      playSound(synthLineV, random(300, 500), 0.2); // Higher swoosh
+      playSound(synthLineV, random(200, 400), 0.2); // Higher swoosh
     }
   } else if (action === 'speed') {
     lastKeyTime.circle = millis();
@@ -271,7 +281,24 @@ function keyPressed() {
       playAngrySound();
     } else {
       speedUp();
-      playSound(synthSpeed, random(600, 1000), 0.05); // Quick blip
+      
+      // Calculate average speed to map to pitch
+      let totalSpeed = 0;
+      let speedCount = 0;
+      for (let shape of shapes) {
+        if (shape instanceof Line) {
+          totalSpeed += shape.oscillationSpeed * 100;
+          speedCount++;
+        } else if (shape.speed !== undefined) {
+          totalSpeed += shape.speed;
+          speedCount++;
+        }
+      }
+      let avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
+      
+      // Map average speed to frequency (600-2000 Hz, gets higher as speed increases)
+      let speedFreq = map(avgSpeed, 0, 50, 100, 2000, true);
+      playSound(synthSpeed, speedFreq, 0.05);
     }
   }
   
@@ -316,4 +343,77 @@ function windowResized() {
       shape.position.y = (shape.position.y / oldHeight) * height;
     }
   }
+}
+
+function drawFullscreenButton() {
+  push();
+  blendMode(DIFFERENCE);
+  textAlign(LEFT, BOTTOM);
+  textSize(width * 0.01); // 1% of width
+  fill(255);
+  
+  let padding = 20;
+  let buttonText = isFullscreen ? 'X' : 'FS';
+  text(buttonText, padding, height - padding);
+  
+  // Change cursor to pointer when hovering over button
+  let buttonWidth = width * 0.01 * 2; // Rough width estimate
+  let buttonHeight = width * 0.01;
+  
+  if (mouseX < padding + buttonWidth && mouseY > height - padding - buttonHeight) {
+    cursor(HAND);
+  } else {
+    cursor(ARROW);
+  }
+  
+  pop();
+}
+
+function mousePressed() {
+  // Check if clicked on fullscreen button
+  let padding = 20;
+  let buttonWidth = width * 0.01 * 2; // Rough width estimate
+  let buttonHeight = width * 0.01;
+  
+  if (mouseX < padding + buttonWidth && mouseY > height - padding - buttonHeight) {
+    // Toggle fullscreen
+    let fs = fullscreen();
+    fullscreen(!fs);
+    isFullscreen = !fs;
+    
+    // Resize canvas after fullscreen toggle
+    setTimeout(() => {
+      resizeCanvas(windowWidth, windowHeight);
+    }, 100);
+    
+    return false;
+  }
+  
+  // Otherwise, cycle background color and invert shapes
+  const bgColors = [
+    '#fffc79', // Yellow
+    '#66386a', // Purple
+    '#ef4026'  // Red-orange
+  ];
+  
+  // Find current background and switch to next
+  let currentBg = bgColor.toString('#rrggbb');
+  let currentIndex = bgColors.indexOf(currentBg);
+  let nextIndex = (currentIndex + 1) % bgColors.length;
+  bgColor = color(bgColors[nextIndex]);
+  
+  // Invert all shape colors
+  for (let shape of shapes) {
+    if (shape.color) {
+      let h = hue(shape.color);
+      let s = saturation(shape.color);
+      let b = brightness(shape.color);
+      
+      // Invert hue (opposite side of color wheel)
+      let newHue = (h + 180) % 360;
+      shape.color = color(newHue, s, b);
+    }
+  }
+  
+  return false;
 }
