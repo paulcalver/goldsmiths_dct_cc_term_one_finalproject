@@ -6,6 +6,24 @@ let lastKeyTime = {
   line: 0
 };
 let keyTimeout = 1000; // 1 second before shapes start dying
+let hasStarted = false; // Track if user has pressed any key
+
+// Sound variables
+let soundCircle;
+let soundLineH;
+let soundLineV;
+let soundSpeed;
+
+// Preload sounds
+function preload() {
+  // Load sound files (replace with your actual file paths)
+  // soundCircle = loadSound('sounds/circle.mp3');
+  // soundLineH = loadSound('sounds/line-h.mp3');
+  // soundLineV = loadSound('sounds/line-v.mp3');
+  // soundSpeed = loadSound('sounds/speed.mp3');
+  
+  // Uncomment above lines and add your sound files to a 'sounds' folder
+}
 
 // Keyboard mapping
 const keyMap = {
@@ -57,11 +75,7 @@ function draw() {
   // Update and draw all shapes
   noStroke();
   for (let shape of shapes) {
-    if (shape instanceof Line) {
-      shape.update(shapes);
-    } else {
-      shape.update();
-    }
+    shape.update();
     shape.displayWithWrap();
   }
 
@@ -74,6 +88,11 @@ function draw() {
   
   updateScore();
   displayScore();
+  
+  // Show start message if user hasn't started yet
+  if (!hasStarted) {
+    displayStartMessage();
+  }
 }
 
 function applyDeathAnimation(shape) {
@@ -130,10 +149,12 @@ function updateScore() {
   let totalSpeed = 0;
   
   for (let shape of shapes) {
-    if (shape.speed !== undefined) {
-      totalSpeed += shape.speed;
-    } else if (shape instanceof Line) {
+    if (shape instanceof Line) {
+      // Lines use oscillationSpeed
       totalSpeed += shape.oscillationSpeed * 100;
+    } else if (shape.speed !== undefined) {
+      // Circles use speed
+      totalSpeed += shape.speed;
     }
   }
   
@@ -144,9 +165,19 @@ function displayScore() {
   push();
   blendMode(DIFFERENCE);
   textAlign(CENTER, CENTER);
-  textSize(200);
-  fill(255); // White with DIFFERENCE mode inverts everything
+  textSize(width * 0.15); // Fixed at 15% of width
+  fill(255);
   text(score, width / 2, height / 2);
+  pop();
+}
+
+function displayStartMessage() {
+  push();
+  blendMode(DIFFERENCE);
+  textAlign(CENTER, CENTER);
+  textSize(width * 0.02); // 2% of width
+  fill(255);
+  text('Press any key A-Z', width / 2, height / 4);
   pop();
 }
 
@@ -154,22 +185,29 @@ function keyPressed() {
   let key_lower = key.toLowerCase();
   if (!keyMap[key_lower]) return;
   
+  // Mark as started on first key press
+  hasStarted = true;
+  
   let action = keyMap[key_lower];
   
   if (action === 'circle') {
     lastKeyTime.circle = millis();
     createCircle();
+    if (soundCircle) soundCircle.play();
   } else if (action === 'line-h' || action === 'line-v') {
     lastKeyTime.line = millis();
     if (action === 'line-h') {
       createHorizontalLine();
+      if (soundLineH) soundLineH.play();
     } else {
       createVerticalLine();
+      if (soundLineV) soundLineV.play();
     }
   } else if (action === 'speed') {
     lastKeyTime.circle = millis();
     lastKeyTime.line = millis();
     speedUp();
+    if (soundSpeed) soundSpeed.play();
   }
   
   return false;

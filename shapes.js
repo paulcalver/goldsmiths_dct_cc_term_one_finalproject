@@ -136,26 +136,25 @@ class Circle extends Shape {
   }
 }
 
-class Line {
+class Line extends Shape {
   constructor(amplitude = 20, frequency = 0.05, isHorizontal = true) {
+    // Use position as the axis position (y for horizontal, x for vertical)
+    let pos = isHorizontal ? random(height) : random(width);
+    super(pos, pos); // Create position vector, but we'll override how it's used
+    
     this.amplitude = amplitude;
     this.frequency = frequency;
     this.timeOffset = random(1000);
     this.isHorizontal = isHorizontal;
-    this.position = random(isHorizontal ? height : width);
+    this.axisPosition = pos; // The position along the axis (y for H, x for V)
     this.verticalOffset = 0; // For falling animation
     this.points = 200;
     this.strokeWeight = 80;
     this.oscillationSpeed = random(0.01, 0.02);
     
-    colorMode(HSB, 360, 100, 100, 255);
-    this.color = color(random(360), 100, 100);
-    
     // Autonomous movement
     this.driftSpeed = random(0.3, 0.8);
     this.driftDirection = random(1) > 0.5 ? 1 : -1;
-    
-    this.isDying = false;
   }
 
   setSpeed(speed) {
@@ -166,21 +165,23 @@ class Line {
     this.oscillationSpeed += speedIncrease * 0.01;
   }
 
-  update(shapes) {
+  update() {
     this.timeOffset += this.oscillationSpeed;
     
     // Autonomous drift
-    this.position += this.driftSpeed * this.driftDirection;
+    this.axisPosition += this.driftSpeed * this.driftDirection;
     
     // Wrap position only if not dying
     if (!this.isDying) {
       let maxPos = this.isHorizontal ? height : width;
-      if (this.position > maxPos) {
-        this.position = 0;
-      } else if (this.position < 0) {
-        this.position = maxPos;
+      if (this.axisPosition > maxPos) {
+        this.axisPosition = 0;
+      } else if (this.axisPosition < 0) {
+        this.axisPosition = maxPos;
       }
     }
+    
+    // Don't call super.update() - lines don't use velocity-based movement
   }
 
   display() {
@@ -197,7 +198,7 @@ class Line {
         let x = map(i, 0, this.points - 1, -extension, width + extension);
         let phase = (x / width) * this.frequency * TWO_PI;
         let offset = sin(this.timeOffset + phase) * this.amplitude;
-        let y = this.position + offset + this.verticalOffset;
+        let y = this.axisPosition + offset + this.verticalOffset;
         curveVertex(x, y);
       }
     } else {
@@ -205,7 +206,7 @@ class Line {
         let y = map(i, 0, this.points - 1, -extension, height + extension);
         let phase = (y / height) * this.frequency * TWO_PI;
         let offset = sin(this.timeOffset + phase) * this.amplitude;
-        let x = this.position + offset;
+        let x = this.axisPosition + offset;
         curveVertex(x, y + this.verticalOffset);
       }
     }
