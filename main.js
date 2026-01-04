@@ -82,6 +82,12 @@ function draw() {
 
   // Apply death animation based on shape type inactivity
   for (let shape of shapes) {
+    // Once dying, always continue dying - can't be saved
+    if (shape.isDying) {
+      applyDeathAnimation(shape);
+      continue;
+    }
+
     let shapeType = shape instanceof Line ? 'line' : 'circle';
     let timeSinceKey = currentTime - lastKeyTime[shapeType];
 
@@ -252,14 +258,17 @@ function keyPressed() {
     lastKeyTime.circle = millis();
     lastKeyTime.line = millis();
 
-    // Check if there are any shapes to speed up
-    if (shapes.length === 0) {
-      // Swap out middle row for random shape when score is zero
-      if (random() > 0.33) {
+    // Check if there are any live (non-dying) shapes to speed up
+    let liveShapes = shapes.filter(shape => !shape.isDying);
+
+    if (shapes.length === 0 || liveShapes.length === 0) {
+      // Swap out middle row for random shape when no shapes or all shapes are dying
+      let randomChoice = random();
+      if (randomChoice < 0.33) {
         createVerticalLine();
         playSound(synthLineV, random(200, 400), 0.2); // Higher swoosh
         hasStarted = true;
-      } else if (random() > 0.66) {
+      } else if (randomChoice < 0.66) {
         createCircle();
         playSound(synthCircle, random(400, 800), 0.15); // Bubble-like
         hasStarted = true;
@@ -319,9 +328,9 @@ function createVerticalLine() {
 function speedUp() {
   for (let shape of shapes) {
     // Skip dying shapes - don't add speed to them
-    // if (shape.isDying) {
-    //   continue;
-    // }
+    if (shape.isDying) {
+      continue;
+    }
 
     shape.addSpeed(2);
   }
