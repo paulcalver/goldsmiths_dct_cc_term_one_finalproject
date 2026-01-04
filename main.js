@@ -17,11 +17,6 @@ let synthSpeed;
 let synthDrop;
 
 
-// Preload sounds
-function preload() {
-  // Using p5.sound synthesizers instead of audio files
-}
-
 // Keyboard mapping
 const keyMap = {
   // Top row - Lines (alternating H/V)
@@ -35,6 +30,9 @@ const keyMap = {
   // Bottom row - Circles
   'z': 'circle', 'x': 'circle', 'c': 'circle', 'v': 'circle',
   'b': 'circle', 'n': 'circle', 'm': 'circle',
+
+  // Spacebar - Speed
+  ' ': 'bgChange',
 };
 
 function setup() {
@@ -166,7 +164,7 @@ function isOffScreen(shape) {
 }
 
 function updateScore() {
-  
+
   // If no shapes, score is 0
   if (shapes.length === 0) {
     score = 0;
@@ -228,7 +226,7 @@ function keyPressed() {
   }
 
   // Mark as started on first key press
-  hasStarted = true;
+  //hasStarted = true;
 
   let action = keyMap[key_lower];
 
@@ -236,14 +234,19 @@ function keyPressed() {
     lastKeyTime.circle = millis();
     createCircle();
     playSound(synthCircle, random(400, 800), 0.15); // Bubble-like
+    hasStarted = true;
+  } else if (action === 'bgChange') {
+    changeBGAndInvertShapes();
   } else if (action === 'line-h' || action === 'line-v') {
     lastKeyTime.line = millis();
     if (action === 'line-h') {
       createHorizontalLine();
       playSound(synthLineH, random(100, 200), 0.2); // Lower swoosh
+      hasStarted = true;
     } else {
       createVerticalLine();
       playSound(synthLineV, random(200, 400), 0.2); // Higher swoosh
+      hasStarted = true;
     }
   } else if (action === 'speed') {
     lastKeyTime.circle = millis();
@@ -255,12 +258,15 @@ function keyPressed() {
       if (random() > 0.33) {
         createVerticalLine();
         playSound(synthLineV, random(200, 400), 0.2); // Higher swoosh
+        hasStarted = true;
       } else if (random() > 0.66) {
         createCircle();
         playSound(synthCircle, random(400, 800), 0.15); // Bubble-like
+        hasStarted = true;
       } else {
         createHorizontalLine();
         playSound(synthLineH, random(100, 200), 0.2); // Lower swoosh
+        hasStarted = true;
       }
 
     } else {
@@ -312,6 +318,11 @@ function createVerticalLine() {
 
 function speedUp() {
   for (let shape of shapes) {
+    // Skip dying shapes - don't add speed to them
+    // if (shape.isDying) {
+    //   continue;
+    // }
+
     shape.addSpeed(2);
   }
 }
@@ -353,27 +364,7 @@ function drawFullscreenButton() {
   pop();
 }
 
-function mousePressed() {
-  // Check if clicked on fullscreen button
-  let padding = 20;
-  let buttonWidth = width * 0.01 * 2; // Rough width estimate
-  let buttonHeight = width * 0.01;
-
-  if (mouseX < padding + buttonWidth && mouseY > height - padding - buttonHeight) {
-    // Toggle fullscreen
-    let fs = fullscreen();
-    fullscreen(!fs);
-    isFullscreen = !fs;
-
-    // Resize canvas after fullscreen toggle
-    setTimeout(() => {
-      resizeCanvas(windowWidth, windowHeight);
-    }, 100);
-
-    return false;
-  }
-
-  // Otherwise, cycle background color and invert shapes
+function changeBGAndInvertShapes() {
   const bgColors = [
     '#fffc79', // Yellow
     '#66386a', // Purple
@@ -399,5 +390,33 @@ function mousePressed() {
     }
   }
 
+  //return false;
+}
+
+function mousePressed() {
+  // Check if clicked on fullscreen button
+  let padding = 20;
+  let buttonWidth = width * 0.01 * 2; // Rough width estimate
+  let buttonHeight = width * 0.01;
+
+  if (mouseX < padding + buttonWidth && mouseY > height - padding - buttonHeight) {
+    // Toggle fullscreen
+    let fs = fullscreen();
+    fullscreen(!fs);
+    isFullscreen = !fs;
+
+    // Resize canvas after fullscreen toggle
+    setTimeout(() => {
+      resizeCanvas(windowWidth, windowHeight);
+    }, 100);
+
+    return false;
+  }
+
+
+
+  // Otherwise, cycle background color and invert shapes
+  changeBGAndInvertShapes();
   return false;
+
 }
