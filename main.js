@@ -208,7 +208,7 @@ function displayStartMessage() {
   textAlign(CENTER, CENTER);
   textSize(width * 0.02); // 2% of width
   fill(255);
-  text('Press any key A-Z', width / 2, height / 4);
+  text('Press any key A-Z to Play', width / 2, height / 4);
   pop();
 }
 
