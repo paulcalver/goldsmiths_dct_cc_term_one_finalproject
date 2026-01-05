@@ -222,13 +222,13 @@ function playSound(synth, freq, duration = 0.1) {
 }
 
 function keyPressed() {
-  let key_lower = key.toLowerCase();
-  if (!keyMap[key_lower]) return;
-
   // Resume audio context on first interaction (fixes browser audio policy)
   if (getAudioContext().state !== 'running') {
     getAudioContext().resume();
   }
+
+  let key_lower = key.toLowerCase();
+  if (!keyMap[key_lower]) return;
 
   // Mark as started on first key press
   //hasStarted = true;
@@ -402,6 +402,11 @@ function changeBGAndInvertShapes() {
 }
 
 function mousePressed() {
+  // Resume audio context on first interaction (fixes browser audio policy)
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+
   // Check if clicked on fullscreen button
   let padding = 20;
   let buttonWidth = width * 0.01 * 2; // Rough width estimate
