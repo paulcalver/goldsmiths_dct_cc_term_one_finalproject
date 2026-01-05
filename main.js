@@ -5,7 +5,7 @@ let lastKeyTime = {
   circle: 0,
   line: 0
 };
-let keyTimeout = 1000; // 1 second before shapes start dying
+let keyTimeout = 3000; // 3 seconds before shapes start dying
 let hasStarted = false; // Track if user has pressed any key
 let isFullscreen = false; // Track fullscreen state
 
@@ -31,7 +31,7 @@ const keyMap = {
   'z': 'circle', 'x': 'circle', 'c': 'circle', 'v': 'circle',
   'b': 'circle', 'n': 'circle', 'm': 'circle',
 
-  // Spacebar - Speed
+  // Spacebar - Change background and invert shapes
   ' ': 'bgChange',
 };
 
@@ -220,7 +220,6 @@ function playSound(synth, freq, duration = 0.1) {
     synth.amp(0, 0.1); // Fade out
   }, duration * 1000);
 }
-
 
 function keyPressed() {
   let key_lower = key.toLowerCase();
