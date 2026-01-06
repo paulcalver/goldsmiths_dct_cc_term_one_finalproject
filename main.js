@@ -47,6 +47,33 @@ const SOUND_ATTACK_TIME = 0.01;
 const SOUND_RELEASE_TIME = 0.1;
 const SOUND_VOLUME = 0.3;
 
+// Text scaling system
+const TEXT_SCALE = {
+  // Base sizes (will be multiplied by scale factor)
+  SCORE: 0.30,
+  TITLE: 0.05,
+  BODY: 0.02,
+  BUTTON: 0.02,
+
+  // Minimum sizes in pixels (prevents text from being too small)
+  MIN_SCORE: 60,
+  MIN_TITLE: 20,
+  MIN_BODY: 10,
+  MIN_BUTTON: 10,
+
+  // Spacing multipliers (multiply by body text size)
+  LINE_HEIGHT: 1.5,
+  PARAGRAPH_GAP: 2.5
+};
+
+// Helper function to calculate responsive text size
+function getTextSize(baseScale, minSize) {
+  // Use the smaller dimension to avoid extreme scaling
+  let dimension = min(width, height);
+  let calculatedSize = dimension * baseScale;
+  return max(calculatedSize, minSize);
+}
+
 // Global variables
 let shapes = [];
 let bgColor;
@@ -234,7 +261,7 @@ function displayScore() {
   push();
   blendMode(DIFFERENCE);
   textAlign(CENTER, CENTER);
-  textSize(width * 0.15); // Fixed at 15% of width
+  textSize(getTextSize(TEXT_SCALE.SCORE, TEXT_SCALE.MIN_SCORE));
   fill(255);
   text(score, width / 2, height / 2);
   pop();
@@ -244,14 +271,22 @@ function displayStartMessage() {
   push();
   blendMode(DIFFERENCE);
   textAlign(CENTER, CENTER);
-  textSize(width * 0.025); // 3% of width
+
+  // Title text
+  let titleSize = getTextSize(TEXT_SCALE.TITLE, TEXT_SCALE.MIN_TITLE);
+  textSize(titleSize);
   fill(255);
   text('Press any key to play *_*'.toUpperCase(), width / 2, height * 0.28);
 
-  textSize(width * 0.01);
-  text('A-Z to make shapes / Spacebar for speed.'.toUpperCase(), width / 2, height * 0.64);
-  text('Score points and go wild!'.toUpperCase(), width / 2, height * 0.67);
-  text('** STROBE CAUTION - THINGS CAN GET A BIT INTENSE! **'.toUpperCase(), width / 2, height * 0.73);
+  // Body text with consistent spacing
+  let bodySize = getTextSize(TEXT_SCALE.BODY, TEXT_SCALE.MIN_BODY);
+  let lineSpacing = bodySize * TEXT_SCALE.LINE_HEIGHT;
+
+  textSize(bodySize);
+  let startY = height * 0.64;
+  text('A-Z to make shapes / Spacebar for speed.'.toUpperCase(), width / 2, startY);
+  text('Score points and go wild!'.toUpperCase(), width / 2, startY + lineSpacing);
+  text('** STROBE CAUTION - THINGS CAN GET A BIT INTENSE! **'.toUpperCase(), width / 2, startY + lineSpacing * TEXT_SCALE.PARAGRAPH_GAP);
   pop();
 }
 
@@ -259,16 +294,18 @@ function displayMakeShapeFirstMessage() {
   push();
   blendMode(DIFFERENCE);
   textAlign(CENTER, CENTER);
-  textSize(width * 0.01);
+
+  let bodySize = getTextSize(TEXT_SCALE.BODY, TEXT_SCALE.MIN_BODY);
+  textSize(bodySize);
 
   // Calculate fade based on time elapsed
   let elapsed = millis() - makeShapeMessageTime;
-  let fadeStart = keyTimeout * MESSAGE_FADE_START_PERCENT;
+  let fadeStart = 2500 * MESSAGE_FADE_START_PERCENT;
   let alpha = 255;
 
   if (elapsed > fadeStart) {
     // Fade from 255 to 0 over the remaining time with easing
-    let t = map(elapsed, fadeStart, keyTimeout, 0, 1); // Normalize to 0-1
+    let t = map(elapsed, fadeStart, 2500, 0, 1); // Normalize to 0-1
     let easedT = t * t; // Quadratic ease-in (accelerating fade)
     alpha = map(easedT, 0, 1, 255, 0);
   }
@@ -397,7 +434,9 @@ function drawFullscreenButton() {
   push();
   blendMode(DIFFERENCE);
   textAlign(LEFT, BOTTOM);
-  textSize(width * 0.01); // 1% of width
+
+  let buttonSize = getTextSize(TEXT_SCALE.BUTTON, TEXT_SCALE.MIN_BUTTON);
+  textSize(buttonSize);
   fill(255);
 
   let padding = 20;
@@ -405,8 +444,8 @@ function drawFullscreenButton() {
   text(buttonText, padding, height - padding);
 
   // Change cursor to pointer when hovering over button
-  let buttonWidth = width * 0.01 * 2; // Rough width estimate
-  let buttonHeight = width * 0.01;
+  let buttonWidth = buttonSize * 2; // Rough width estimate
+  let buttonHeight = buttonSize;
 
   if (mouseX < padding + buttonWidth && mouseY > height - padding - buttonHeight) {
     cursor(HAND);
@@ -446,8 +485,9 @@ function changeBGAndInvertShapes() {
 function mousePressed() {
   // Check if clicked on fullscreen button
   let padding = 20;
-  let buttonWidth = width * 0.01 * 2; // Rough width estimate
-  let buttonHeight = width * 0.01;
+  let buttonSize = getTextSize(TEXT_SCALE.BUTTON, TEXT_SCALE.MIN_BUTTON);
+  let buttonWidth = buttonSize * 2; // Rough width estimate
+  let buttonHeight = buttonSize;
 
   if (mouseX < padding + buttonWidth && mouseY > height - padding - buttonHeight) {
     // Toggle fullscreen
