@@ -24,8 +24,8 @@
 
 // Configuration constants
 const KEY_TIMEOUT = 6000; // Milliseconds before shapes enter warning phase
-const WARNING_DURATION = 4000; // Milliseconds of warning before death (grace period)
-const DEATH_DROP_SOUND_FRAME = 60; // Frame when drop sound plays
+const WARNING_DURATION = 2000; // Milliseconds of warning before death (grace period)
+const DEATH_DROP_SOUND_FRAME = 30; // Frame when drop sound plays
 const OFFSCREEN_THRESHOLD = 200; // Pixels beyond screen edge before removal
 
 // Score calculation constants
@@ -246,12 +246,12 @@ function displayStartMessage() {
   textAlign(CENTER, CENTER);
   textSize(width * 0.025); // 3% of width
   fill(255);
-  text('Press any key A-Z to make shapes\nSpacebar for speed.'.toUpperCase(), width / 2, height * 0.28);
-  text('Score points and go wild!'.toUpperCase(), width / 2, height * 0.64);
-  
+  text('Press any key to play *_*'.toUpperCase(), width / 2, height * 0.28);
 
   textSize(width * 0.01);
-  text('** STROBE CAUTION - THINGS CAN GET A BIT INTENSE! **'.toUpperCase(), width / 2, height * 0.7);
+  text('A-Z to make shapes / Spacebar for speed.'.toUpperCase(), width / 2, height * 0.64);
+  text('Score points and go wild!'.toUpperCase(), width / 2, height * 0.67);
+  text('** STROBE CAUTION - THINGS CAN GET A BIT INTENSE! **'.toUpperCase(), width / 2, height * 0.73);
   pop();
 }
 
@@ -274,7 +274,7 @@ function displayMakeShapeFirstMessage() {
   }
 
   fill(255, alpha);
-  text('Make a shape first with any key A-Z.'.toUpperCase(), width / 2, height * 0.75);
+  text('Make a shape first with any key A-Z.'.toUpperCase(), width / 2, height * 0.33);
   pop();
 }
 
